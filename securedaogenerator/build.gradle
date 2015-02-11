@@ -1,0 +1,21 @@
+apply plugin: 'application'
+apply plugin: 'java'
+
+mainClassName = "com.nubuckito.MySecureDaoGenerator"
+// edit output direction
+def outputDir = "../app/src/main/java-gen"
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile project(':DaoGenerator')
+    compile 'org.freemarker:freemarker:2.3.20'
+}
+
+task createDocs {
+    def docs = file(outputDir)
+    docs.mkdirs()
+}
+
+run {
+    args outputDir
+}
