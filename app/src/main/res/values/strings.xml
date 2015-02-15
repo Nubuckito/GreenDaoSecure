@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">GreenDaoSecure</string>
+    <string name="encryption_choice">Encrypt database ?</string>
 </resources>
