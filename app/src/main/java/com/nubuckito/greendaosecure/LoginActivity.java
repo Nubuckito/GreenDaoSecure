@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -51,6 +52,9 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
      */
     private UserLoginTask mAuthTask = null;
 
+    //Shared preference change the login display flag
+    private SharedPreferences prefs = null;
+
     // Handler to talk to the CacheWordService
     private CacheWordHandler mCacheWord;
 
@@ -64,6 +68,9 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        prefs = getSharedPreferences("prefs_private", MODE_PRIVATE);
+
         setContentView(R.layout.activity_login);
 
         // Set up the login form.
@@ -138,19 +145,18 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
         boolean cancel = false;
         View focusView = null;
 
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
+        // Check for a password, if the user entered one.
+        if (TextUtils.isEmpty(password)) {
+            mPasswordView.setError(getString(R.string.error_field_required));
             focusView = mPasswordView;
             cancel = true;
-        }
-
-        //Check for a valid password if the user wants the db crypt
-        if (mEncryptCheckBox.isChecked() && !TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
+        } else {
+            // Check for a valid password, if the user entered one.
+            if (!isPasswordValid(password)) {
+                mPasswordView.setError(getString(R.string.error_invalid_password));
+                focusView = mPasswordView;
+                cancel = true;
+            }
         }
 
         // Check for a valid email address.
@@ -344,6 +350,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
             showProgress(false);
 
             if (success) {
+                prefs.edit().putBoolean("userRegistered", false).commit();
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));

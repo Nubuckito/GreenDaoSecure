@@ -40,12 +40,13 @@ public class MainActivity extends ActionBarActivity {
         super.onResume();
 
         //test to know if it's the first launch
-        if (prefs.getBoolean("isFirstLaunch", true)) {
-            prefs.edit().putBoolean("isFirstLaunch", false).commit();
+        if (prefs.getBoolean("userRegistered", true)) {
             //it's the first launch so we have to start the login/register activity
-            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            Intent reroot = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(reroot);
             Toast.makeText(MainActivity.this, "First Run", Toast.LENGTH_LONG)
                     .show();
+            this.finish();
         }
     }
 
