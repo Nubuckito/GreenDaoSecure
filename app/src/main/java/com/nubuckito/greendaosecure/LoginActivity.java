@@ -30,6 +30,7 @@ import android.widget.TextView;
 
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import info.guardianproject.cacheword.*;
@@ -276,7 +277,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
                 mConfirmPasswordView.setError(getString(R.string.error_invalid_password));
                 focusView = mConfirmPasswordView;
                 cancel = true;
-            }else if(mConfirmPasswordView.getText().toString().toCharArray() != mNewPasswordView.getText().toString().toCharArray()){
+            }else if(!Arrays.equals(mConfirmPasswordView.getText().toString().toCharArray(),mNewPasswordView.getText().toString().toCharArray())){
                 mConfirmPasswordView.setError(getString(R.string.error_different_password));
                 focusView = mConfirmPasswordView;
                 cancel = true;
@@ -389,6 +390,10 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
 
             }
         });
+    }
+
+    private void promptPassphrase() {
+
     }
 
 }

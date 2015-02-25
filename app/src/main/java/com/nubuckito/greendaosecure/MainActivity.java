@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,14 +13,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
 
-public class MainActivity extends ActionBarActivity {
+
+public class MainActivity extends ActionBarActivity implements ICacheWordSubscriber {
 
     private static final String TAG = LoginActivity.class.getName();
     /**
      * variable used to know if this the first app launch.
      */
     private SharedPreferences prefs = null;
+
+    private CacheWordHandler mCacheWord;
 
 
     @Override
@@ -33,6 +39,9 @@ public class MainActivity extends ActionBarActivity {
         }
 
         prefs = getSharedPreferences("prefs_private", MODE_PRIVATE);
+
+        mCacheWord = new CacheWordHandler(this,5000);
+        mCacheWord.connectToService();
     }
 
     @Override
@@ -70,6 +79,42 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onCacheWordUninitialized() {
+        Log.d(TAG, "onCacheWordUninitialized");
+        clearViewsAndLock();
+    }
+
+    @Override
+    public void onCacheWordLocked() {
+        Log.d(TAG, "onCacheWordLocked");
+        clearViewsAndLock();
+    }
+
+    @Override
+    public void onCacheWordOpened() {
+        Log.d(TAG, "onCacheWordOpened");
+        //unlockDatabase();
+
+        //Populate data
+
+    }
+
+    void showLockScreen() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("originalIntent", getIntent());
+        startActivity(intent);
+        finish();
+    }
+
+    void clearViewsAndLock() {
+        //closeDatabase();
+
+        System.gc();
+        showLockScreen();
     }
 
     /**
