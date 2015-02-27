@@ -11,9 +11,11 @@ import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.Log;
@@ -21,6 +23,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -32,6 +35,7 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 
 import info.guardianproject.cacheword.*;
 
@@ -58,15 +62,24 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     private CacheWordHandler mCacheWord;
 
     // UI references.
-    private AutoCompleteTextView mEmailView;
+    private AutoCompleteTextView mEmail;
     private EditText mPasswordView;
     private EditText mNewPasswordView;
     private EditText mConfirmPasswordView;
     private View mProgressView;
+    private View mEmailLoginView;
     private View mRootLoginFormView;
     private View mLoginFormView;
     private View mCreateFormView;
     private CheckBox mEncryptCheckBox;
+    private Button btnLogin;
+
+    //Activity variables
+    private int failedAttempts = 0;
+    private int totalFailedAttempts = 0;
+    private CountDownTimer countDownTimer;
+    private long interval = 1000;
+    private boolean timerProcessing=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +92,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
         setContentView(R.layout.activity_login);
 
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
+        mEmailLoginView = findViewById(R.id.email_login_form);
+        mEmail = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
 
         mPasswordView = (EditText) findViewById(R.id.password);
@@ -113,6 +127,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
         mProgressView = findViewById(R.id.login_progress);
         mLoginFormView = findViewById(R.id.login_form);
         mCreateFormView = findViewById(R.id.create_form);
+        btnLogin = (Button) findViewById(R.id.email_sign_in_button);
 
     }
 
@@ -225,7 +240,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
                 new ArrayAdapter<String>(LoginActivity.this,
                         android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
 
-        mEmailView.setAdapter(adapter);
+        mEmail.setAdapter(adapter);
     }
 
     /**
@@ -261,7 +276,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     private void validateCreate(){
         mConfirmPasswordView.setError(null);
         mNewPasswordView.setError(null);
-        mEmailView.setError(null);
+        mEmail.setError(null);
 
         boolean cancel = false;
         View focusView = null;
@@ -299,13 +314,13 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
         }
 
         // Check for a valid email address.
-        if (TextUtils.isEmpty(mEmailView.getText().toString())) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
+        if (TextUtils.isEmpty(mEmail.getText().toString())) {
+            mEmail.setError(getString(R.string.error_field_required));
+            focusView = mEmail;
             cancel = true;
-        } else if (!Constants.isEmailValid(mEmailView.getText().toString())) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
+        } else if (!Constants.isEmailValid(mEmail.getText().toString())) {
+            mEmail.setError(getString(R.string.error_invalid_email));
+            focusView = mEmail;
             cancel = true;
         }
 
@@ -328,7 +343,9 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
      */
     private void register(){
 
-        //TODO account create. => sauvegarder le mail dans les pref utilisateurs
+        //TODO account create.
+        // => sauvegarder le mail dans les pref utilisateurs
+        // => générer une BD cryptée si besoin
 
         try {
             mCacheWord.setPassphrase(mConfirmPasswordView.getText().toString().toCharArray());
@@ -345,9 +362,11 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
      *  =>setPassphrase in CacheWord
      */
     private void initializePassphrase() {
+
         // Passphrase is not set, so allow the user to create one
 
         mCreateFormView.setVisibility(View.VISIBLE);
+        mEmailLoginView.setVisibility(View.VISIBLE);
         mLoginFormView.setVisibility(View.GONE);
 
         mNewPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -380,8 +399,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
         });
 
 
-        Button btnCreate = (Button) findViewById(R.id.email_sign_in_button);
-        btnCreate.setOnClickListener(new OnClickListener()
+        btnLogin = (Button) findViewById(R.id.email_sign_in_button);
+        btnLogin.setOnClickListener(new OnClickListener()
         {
             @Override
             public void onClick(View v) {
@@ -393,6 +412,93 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     }
 
     private void promptPassphrase() {
+        // Passphrase is set, so allow the user to enter one
+
+        mCreateFormView.setVisibility(View.GONE);
+        mEmailLoginView.setVisibility(View.GONE);
+        mLoginFormView.setVisibility(View.VISIBLE);
+
+
+
+        btnLogin.setOnClickListener(new OnClickListener()
+        {
+            @Override
+            public void onClick(View v) {
+                if (!timerProcessing) {
+                    mPasswordView.setError(null);
+
+                    if (mPasswordView.getText().toString().length() == 0)
+                        return;
+                    // Check passphrase
+                    try {
+                        mCacheWord.setPassphrase(mPasswordView.getText().toString().toCharArray());
+                    } catch (GeneralSecurityException e) {
+
+                        //Wrong PassPhrase
+                        // TODO implement wipe if fail
+
+                        Log.e(TAG, "Cacheword pass verification failed: " + e.getMessage());
+                        mPasswordView.setText("");
+
+                        //count for wrong attempts. Waiting if 5 wrongs in a row
+                        failedAttempts++;
+
+
+                        //incremental waiting every 5 attempts
+                        if ((5-failedAttempts) == 0) {
+                            totalFailedAttempts++;
+                            failedAttempts = 0;
+
+                            countDownTimer = new CountDownTimer(5000 * totalFailedAttempts, interval) {
+
+                                @Override
+                                public void onTick(long millisUntilFinished) {
+                                    btnLogin.setText( getString(R.string.wait_too_many_attempts,Long.toString(millisUntilFinished / 1000)));
+                                    timerProcessing=true;
+                                }
+
+                                @Override
+                                public void onFinish() {
+                                    timerProcessing=false;
+                                    btnLogin.setText(getString(R.string.action_sign_in));
+                                }
+                            };
+                            mPasswordView.setError(getString(R.string.error_too_many_attempts));
+                            countDownTimer.start();
+                        }else{
+                            mPasswordView.setError(getString(R.string.error_incorrect_password, 5 - failedAttempts));
+                        }
+
+                        return;
+                    }
+
+                }
+            }
+        });
+
+        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener()
+        {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event)
+            {
+                if (actionId == EditorInfo.IME_NULL || actionId == EditorInfo.IME_ACTION_GO)
+                {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    Handler threadHandler = new Handler();
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0, new ResultReceiver(
+                            threadHandler)
+                    {
+                        @Override
+                        protected void onReceiveResult(int resultCode, Bundle resultData) {
+                            super.onReceiveResult(resultCode, resultData);
+                            btnLogin.performClick();
+                        }
+                    });
+                    return true;
+                }
+                return false;
+            }
+        });
 
     }
 
