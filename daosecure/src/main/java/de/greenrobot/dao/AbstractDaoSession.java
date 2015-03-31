@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import de.greenrobot.dao.wrapper.SQLiteDatabaseWrapper;
 import de.greenrobot.dao.async.AsyncSession;
 import de.greenrobot.dao.query.QueryBuilder;
+import de.greenrobot.dao.wrapper.SQLiteDatabaseWrapper;
 
 /**
  * DaoSession gives you access to your DAOs, offers convenient persistence methods, and also serves as a session cache.<br/>
@@ -192,6 +192,18 @@ public class AbstractDaoSession {
      */
     public AsyncSession startAsyncSession() {
         return new AsyncSession(this);
+    }
+
+    public boolean isOpen() {
+        if (db != null)
+            return db.isOpen();
+        else
+            return false;
+    }
+
+    public void rekey(String password) {
+        db.execSQL("PRAGMA rekey = '" + password + "'");
+        System.gc();
     }
 
 }

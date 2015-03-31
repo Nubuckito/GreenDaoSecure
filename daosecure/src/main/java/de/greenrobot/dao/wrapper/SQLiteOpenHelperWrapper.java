@@ -21,7 +21,8 @@ public abstract class SQLiteOpenHelperWrapper {
 	private final String mName;
 	private final CursorFactory mFactory;
 	private final int mNewVersion;
-    private CacheWordHandler mHandler;
+	private final CacheWordHandler mHandler;
+	private final boolean mCryptDB;
 
 	private SQLiteDatabaseWrapper mDatabase = null;
 	private boolean mIsInitializing = false;
@@ -36,7 +37,7 @@ public abstract class SQLiteOpenHelperWrapper {
 	 * @param factory
 	 * @param version
 	 */
-	public SQLiteOpenHelperWrapper(Context context, String name, CacheWordHandler cacheWord, CursorFactory factory, int version) {
+	public SQLiteOpenHelperWrapper(Context context, String name, CacheWordHandler cacheWord, CursorFactory factory, int version, boolean cryptDB) {
 		if (version < 1)
 			throw new IllegalArgumentException("Version must be >= 1, was " + version);
 
@@ -45,8 +46,9 @@ public abstract class SQLiteOpenHelperWrapper {
         mHandler = cacheWord;
 		mFactory = factory;
 		mNewVersion = version;
+		mCryptDB = cryptDB;
 
-		if (cacheWord != null) {
+		if (mCryptDB) {
 			// Load SQLcipher libraries if needed
 			SQLiteDatabaseWrapper.loadLibs(mContext);
 		}
@@ -68,6 +70,9 @@ public abstract class SQLiteOpenHelperWrapper {
 	 * @return a read/write database object valid until {@link #close} is called
 	 */
 	public synchronized SQLiteDatabaseWrapper getWritableDatabase() {
+		if (mCryptDB && mHandler.isLocked())
+			throw new SQLiteException("Database locked. Decryption key unavailable.");
+
 		if (mDatabase != null && mDatabase.isOpen() && !mDatabase.isReadOnly()) {
 			return mDatabase; // The database is already open for business
 		}
@@ -89,8 +94,8 @@ public abstract class SQLiteOpenHelperWrapper {
 		try {
 			mIsInitializing = true;
 			if (mName == null) {
-                if(mHandler != null) {
-                    db = SQLiteDatabaseWrapper.create(null, encodeRawKey(mHandler.getEncryptionKey()));
+				if (mCryptDB) {
+					db = SQLiteDatabaseWrapper.create(null, encodeRawKey(mHandler.getEncryptionKey()));
                 }else{
                     db = SQLiteDatabaseWrapper.create(null, null);
                 }
@@ -100,8 +105,8 @@ public abstract class SQLiteOpenHelperWrapper {
 				File dbPathFile = new File(path);
 				if (!dbPathFile.exists())
 					dbPathFile.getParentFile().mkdirs();
-                if(mHandler != null) {
-                    db = SQLiteDatabaseWrapper.openOrCreateDatabase(path, encodeRawKey(mHandler.getEncryptionKey()), mFactory);
+				if (mCryptDB) {
+					db = SQLiteDatabaseWrapper.openOrCreateDatabase(path, encodeRawKey(mHandler.getEncryptionKey()), mFactory);
                 }else{
                     db = SQLiteDatabaseWrapper.openOrCreateDatabase(path, null, mFactory);
                 }
@@ -157,6 +162,11 @@ public abstract class SQLiteOpenHelperWrapper {
 	 * @return a database object valid until {@link #getWritableDatabase} or {@link #close} is called.
 	 */
 	public synchronized SQLiteDatabaseWrapper getReadableDatabase() {
+
+		if (mCryptDB && mHandler.isLocked())
+			throw new SQLiteException("Database locked. Decryption key unavailable.");
+
+
 		if (mDatabase != null && mDatabase.isOpen()) {
 			return mDatabase; // The database is already open for business
 		}
@@ -189,8 +199,8 @@ public abstract class SQLiteOpenHelperWrapper {
 				mIsInitializing = true;
 				db.close();
 			}
-            if (mHandler != null) {
-                db = SQLiteDatabaseWrapper.openDatabase(path, encodeRawKey(mHandler.getEncryptionKey()), mFactory, SQLiteDatabase.OPEN_READONLY);
+			if (mCryptDB) {
+				db = SQLiteDatabaseWrapper.openDatabase(path, encodeRawKey(mHandler.getEncryptionKey()), mFactory, SQLiteDatabase.OPEN_READONLY);
             }else{
                 db = SQLiteDatabaseWrapper.openDatabase(path, null, mFactory, SQLiteDatabase.OPEN_READONLY);
             }

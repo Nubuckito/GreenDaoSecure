@@ -16,6 +16,8 @@ import android.widget.Toast;
 import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
 
+import static greendao.DaoMaster.DevOpenHelper;
+
 
 public class MainActivity extends ActionBarActivity implements ICacheWordSubscriber {
 
@@ -26,6 +28,8 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
     private SharedPreferences prefs = null;
 
     private CacheWordHandler mCacheWord;
+
+    private DevOpenHelper mDbHelper;
 
 
     @Override
@@ -42,6 +46,7 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
 
         mCacheWord = new CacheWordHandler(this,5000);
         mCacheWord.connectToService();
+
     }
 
     @Override
@@ -111,10 +116,38 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
     }
 
     void clearViewsAndLock() {
-        //closeDatabase();
+        closeDatabase();
 
+        // ((App)getApplicationContext()).getDaoSession().clear();
         System.gc();
         showLockScreen();
+    }
+
+    private void closeDatabase() {
+        if (mDbHelper != null) {
+            mDbHelper.close();
+            mDbHelper = null;
+        }
+    }
+
+    private void unlockDatabase() {
+        if (mCacheWord.isLocked())
+            return;
+
+        // mDbHelper = new NotesDbAdapter(mCacheWord, this);
+        try {
+
+            //mDbHelper.open();
+
+            //if (dataStream != null)
+            //     importDataStream();
+            // else
+            //     fillData();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, getString(R.string.error_incorrect_password), Toast.LENGTH_LONG).show();
+        }
     }
 
     /**

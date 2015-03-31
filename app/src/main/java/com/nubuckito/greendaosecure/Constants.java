@@ -4,6 +4,7 @@ package com.nubuckito.greendaosecure;
 public class Constants {
     public static final String SHARED_PREFS_SECURE_APP = "use_lines_in_notes";
 
+    public static final String DBNAME = "SecuredDB";
     public static final String TAG = "NoteCipher";
     public static final int MIN_PASS_LENGTH = 8;
     // public final static int MAX_PASS_ATTEMPTS = 3;
@@ -15,10 +16,7 @@ public class Constants {
      * @return True if the password is a valid one, false otherwise
      */
     public static final boolean validatePassword(char[] pass) {
-        if (pass.length < Constants.MIN_PASS_LENGTH) {
-            return false;
-        }
-        return true;
+        return pass.length >= Constants.MIN_PASS_LENGTH;
     }
 
     /**

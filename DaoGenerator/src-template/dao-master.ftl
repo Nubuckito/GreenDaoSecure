@@ -59,8 +59,8 @@ public class DaoMaster extends AbstractDaoMaster {
     
     public static abstract class OpenHelper extends SQLiteOpenHelperWrapper  {
 
-        public OpenHelper(Context context, String name,CacheWordHandler cacheWord, CursorFactory factory) {
-            super(context, name, cacheWord, factory, SCHEMA_VERSION);
+        public OpenHelper(Context context, String name,CacheWordHandler cacheWord, CursorFactory factory, boolean cryptDB) {
+            super(context, name, cacheWord, factory, SCHEMA_VERSION, cryptDB);
         }
 
         @Override
@@ -71,9 +71,9 @@ public class DaoMaster extends AbstractDaoMaster {
     }
     
     /** WARNING: Drops all table on Upgrade! Use only during development. */
-    public static class DevOpenHelper extends SQLiteOpenHelperWrapper {
-        public DevOpenHelper(Context context, String name, CacheWordHandler cacheWord, CursorFactory factory) {
-            super(context, name, cacheWord, factory);
+    public static class DevOpenHelper extends OpenHelper {
+        public DevOpenHelper(Context context, String name, CacheWordHandler cacheWord, CursorFactory factory, boolean cryptDB) {
+            super(context, name, cacheWord, factory, cryptDB);
         }
 
         @Override

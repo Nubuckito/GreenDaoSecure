@@ -36,8 +36,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-
-import info.guardianproject.cacheword.*;
+import info.guardianproject.cacheword.CacheWordHandler;
+import info.guardianproject.cacheword.ICacheWordSubscriber;
+import repository.DBRepository;
 
 
 /**
@@ -80,6 +81,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     private CountDownTimer countDownTimer;
     private long interval = 1000;
     private boolean timerProcessing=false;
+    private boolean passPhraseInit = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -249,7 +251,9 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     @Override
     public void onCacheWordUninitialized() {
         initializePassphrase();
+        initializeDatabase();
     }
+
 
     /**
      * Called when the cached secrets are wiped from memory.
@@ -264,7 +268,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
      */
     @Override
     public void onCacheWordOpened() {
-        Intent intent = (Intent) getIntent().getParcelableExtra("originalIntent");
+        Intent intent = getIntent().getParcelableExtra("originalIntent");
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
         startActivity(intent);
@@ -345,7 +349,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
 
         //TODO account create.
         // => sauvegarder le mail dans les pref utilisateurs
-        // => générer une BD cryptée si besoin
+        prefs.edit().putString("userMail", mEmail.getText().toString()).commit();
 
         try {
             mCacheWord.setPassphrase(mConfirmPasswordView.getText().toString().toCharArray());
@@ -362,6 +366,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
      *  =>setPassphrase in CacheWord
      */
     private void initializePassphrase() {
+        passPhraseInit = true;
 
         // Passphrase is not set, so allow the user to create one
 
@@ -435,7 +440,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
                     } catch (GeneralSecurityException e) {
 
                         //Wrong PassPhrase
-                        // TODO implement wipe if fail
+                        // TODO implement wipe if fail in user option
 
                         Log.e(TAG, "Cacheword pass verification failed: " + e.getMessage());
                         mPasswordView.setText("");
@@ -500,6 +505,13 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
             }
         });
 
+    }
+
+    /**
+     * Database initialization when cacheword (or app) is first initialized.
+     */
+    private void initializeDatabase() {
+        DBRepository.getInstance().initializeDatabase(this, ((App) getApplicationContext()).getApplicationName(this), mCacheWord, null, mEncryptCheckBox.isChecked());
     }
 
 }

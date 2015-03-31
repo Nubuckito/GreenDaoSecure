@@ -17,15 +17,20 @@
  */
 package de.greenrobot.daogenerator;
 
-import de.greenrobot.daogenerator.Property.PropertyBuilder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
-import java.util.*;
+import de.greenrobot.daogenerator.Property.PropertyBuilder;
 
 /**
  * Model class for an entity: a Java data object mapped to a data base table. A new entity is added to a {@link Schema}
- * by the method {@link Schema#addEntity(String)} (there is no public constructor for {@link Entity} itself). <br/>
- * <br/> Use the various addXXX methods to add entity properties, indexes, and relations to other entities (addToOne,
- * addToMany).<br/> <br/> There are further configuration possibilities: <ul> <li>{@link
+ * by the method {@link Schema#addEntity(String)} (there is no public constructor for {@link Entity} itself).
+ * Use the various addXXX methods to add entity properties, indexes, and relations to other entities (addToOne,
+ * addToMany).There are further configuration possibilities: <ul> <li>{@link
  * Entity#implementsInterface(String...)} and {@link #implementsSerializable()} to specify interfaces the entity will
  * implement</li> <li>{@link #setSuperclass(String)} to specify a class of which the entity will extend from</li>
  * <li>Various setXXX methods</li> </ul>
@@ -354,7 +359,9 @@ public class Entity {
         this.skipGeneration = skipGeneration;
     }
 
-    /** Flag if CREATE & DROP TABLE scripts should be skipped in Dao. */
+    /**
+     * Flag if CREATE and DROP TABLE scripts should be skipped in Dao.
+     */
     public void setSkipTableCreation(boolean skipTableCreation) {
         this.skipTableCreation = skipTableCreation;
     }
