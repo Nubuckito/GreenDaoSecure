@@ -1,9 +1,12 @@
 package com.nubuckito.greendaosecure;
 
+import android.app.Notification;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,26 +14,22 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.SimpleCursorAdapter;
 
+import greendao.BoxDao;
 import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
-
-import static greendao.DaoMaster.DevOpenHelper;
+import repository.BoxRepository;
+import repository.DBRepository;
 
 
 public class MainActivity extends ActionBarActivity implements ICacheWordSubscriber {
 
     private static final String TAG = LoginActivity.class.getName();
-    /**
-     * variable used to know if this the first app launch.
-     */
+
     private SharedPreferences prefs = null;
 
     private CacheWordHandler mCacheWord;
-
-    private DevOpenHelper mDbHelper;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,26 +41,30 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
                     .commit();
         }
 
-        prefs = getSharedPreferences("prefs_private", MODE_PRIVATE);
+        prefs = getSharedPreferences(Constants.SHARED_PREFS_SECURE_APP, MODE_PRIVATE);
 
-        mCacheWord = new CacheWordHandler(this,5000);
-        mCacheWord.connectToService();
 
+        String[] from = {BoxDao.Properties.Name.columnName, BoxDao.Properties.Description.columnName};
+        int[] to = {0/*name emplacement in listview*/, 1/*"description emplacement in listview"*/};
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2,
+                BoxRepository.getAllBoxesCursor(), from, to, SimpleCursorAdapter.NO_SELECTION);
+
+        mCacheWord = new CacheWordHandler(this, 5000);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        //test to know if it's the first launch
-        /*if (prefs.getBoolean("userRegistered", true)) {
-            //it's the first launch so we have to start the login/register activity
-            Intent reroot = new Intent(MainActivity.this, LoginActivity.class);
-            startActivity(reroot);
-            Toast.makeText(MainActivity.this, "First Run", Toast.LENGTH_LONG)
-                    .show();
-            this.finish();
-        }*/
+        mCacheWord.connectToService();
+        mCacheWord.setNotification(buildNotification(this));
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Notify the CacheWordHandler
+        mCacheWord.disconnectFromService();
     }
 
     @Override
@@ -101,9 +104,9 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
     @Override
     public void onCacheWordOpened() {
         Log.d(TAG, "onCacheWordOpened");
-        //unlockDatabase();
+        //Database already opened on login successful
 
-        //Populate data
+        //TODO Populate data
 
     }
 
@@ -116,38 +119,27 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
     }
 
     void clearViewsAndLock() {
-        closeDatabase();
-
-        // ((App)getApplicationContext()).getDaoSession().clear();
-        System.gc();
+        DBRepository.getInstance().lock();
         showLockScreen();
     }
 
-    private void closeDatabase() {
-        if (mDbHelper != null) {
-            mDbHelper.close();
-            mDbHelper = null;
-        }
-    }
-
-    private void unlockDatabase() {
-        if (mCacheWord.isLocked())
-            return;
-
-        // mDbHelper = new NotesDbAdapter(mCacheWord, this);
-        try {
-
-            //mDbHelper.open();
-
-            //if (dataStream != null)
-            //     importDataStream();
-            // else
-            //     fillData();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, getString(R.string.error_incorrect_password), Toast.LENGTH_LONG).show();
-        }
+    /**
+     * Build a welcome notification on successful login
+     *
+     * @param c Context
+     * @return the notification to display
+     */
+    private Notification buildNotification(Context c) {
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c);
+        b.setSmallIcon(R.drawable.common_signin_btn_text_light);
+        b.setContentTitle("Bienvenue !");
+        b.setContentText("Vous êtes connecté.");
+        //b.setTicker(c.getText(R.string.cacheword_notification_cached));
+        b.setDefaults(Notification.DEFAULT_VIBRATE);
+        b.setWhen(System.currentTimeMillis());
+        b.setOngoing(true);
+        b.setContentIntent(CacheWordHandler.getPasswordLockPendingIntent(c));
+        return b.build();
     }
 
     /**

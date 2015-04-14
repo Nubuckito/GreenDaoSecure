@@ -87,7 +87,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        prefs = getSharedPreferences("prefs_private", MODE_PRIVATE);
+        prefs = getSharedPreferences(Constants.SHARED_PREFS_SECURE_APP, MODE_PRIVATE);
         mCacheWord = new CacheWordHandler(this);
 
 
@@ -225,17 +225,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
 
     }
 
-    private interface ProfileQuery {
-        String[] PROJECTION = {
-                ContactsContract.CommonDataKinds.Email.ADDRESS,
-                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
-        };
-
-        int ADDRESS = 0;
-        int IS_PRIMARY = 1;
-    }
-
-
     private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
@@ -252,8 +241,8 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     public void onCacheWordUninitialized() {
         initializePassphrase();
         initializeDatabase();
+        prefs.edit().putBoolean(Constants.IS_CYPHER_DB, mEncryptCheckBox.isChecked()).commit();
     }
-
 
     /**
      * Called when the cached secrets are wiped from memory.
@@ -268,6 +257,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
      */
     @Override
     public void onCacheWordOpened() {
+        initializeDatabase();
         Intent intent = getIntent().getParcelableExtra("originalIntent");
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
@@ -275,7 +265,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
         finish();
         overridePendingTransition(0, 0);
     }
-
 
     private void validateCreate(){
         mConfirmPasswordView.setError(null);
@@ -345,11 +334,11 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
      * If there are form errors (invalid email, missing fields, etc.), the
      * errors are presented and no actual login attempt is made.
      */
-    private void register(){
+    private void register() {
 
         //TODO account create.
         // => sauvegarder le mail dans les pref utilisateurs
-        prefs.edit().putString("userMail", mEmail.getText().toString()).commit();
+        prefs.edit().putString(Constants.CURRENT_USER_MAIL, mEmail.getText().toString()).commit();
 
         try {
             mCacheWord.setPassphrase(mConfirmPasswordView.getText().toString().toCharArray());
@@ -511,7 +500,17 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
      * Database initialization when cacheword (or app) is first initialized.
      */
     private void initializeDatabase() {
-        DBRepository.getInstance().initializeDatabase(this, ((App) getApplicationContext()).getApplicationName(this), mCacheWord, null, mEncryptCheckBox.isChecked());
+        DBRepository.getInstance().connectToDataBase(this, ((App) getApplicationContext()).getApplicationName(this), mCacheWord, null, mEncryptCheckBox.isChecked());
+    }
+
+    private interface ProfileQuery {
+        String[] PROJECTION = {
+                ContactsContract.CommonDataKinds.Email.ADDRESS,
+                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
+        };
+
+        int ADDRESS = 0;
+        int IS_PRIMARY = 1;
     }
 
 }

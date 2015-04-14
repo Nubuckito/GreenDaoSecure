@@ -1,6 +1,7 @@
 package repository;
 
 import android.content.Context;
+import android.database.Cursor;
 
 import java.util.List;
 
@@ -12,27 +13,31 @@ import greendao.BoxDao;
  * Created by Buzinga on 09/03/2015.
  */
 public class BoxRepository {
-    private static BoxDao getBoxDao(Context c) {
+    private static BoxDao getBoxDao() {
         return DBRepository.getInstance().getDaoSession().getBoxDao();
     }
 
-    public static void insertOrUpdate(Context context, Box box) {
-        getBoxDao(context).insertOrReplace(box);
+    public static void insertOrUpdate(Box box) {
+        getBoxDao().insertOrReplace(box);
     }
 
     public static void clearBoxes(Context context) {
-        getBoxDao(context).deleteAll();
+        getBoxDao().deleteAll();
     }
 
-    public static void deleteBoxWithId(Context context, long id) {
-        getBoxDao(context).delete(getBoxForId(context, id));
+    public static void deleteBoxWithId(long id) {
+        getBoxDao().delete(getBoxForId(id));
     }
 
-    public static Box getBoxForId(Context context, long id) {
-        return getBoxDao(context).load(id);
+    public static Box getBoxForId(long id) {
+        return getBoxDao().load(id);
     }
 
-    public static List<Box> getAllBoxes(Context context) {
-        return getBoxDao(context).loadAll();
+    public static List<Box> getAllBoxes() {
+        return getBoxDao().loadAll();
+    }
+
+    public static Cursor getAllBoxesCursor() {
+        return getBoxDao().getDatabase().query(getBoxDao().getTablename(), getBoxDao().getAllColumns(), null, null, null, null, BoxDao.Properties.Name.columnName + " COLLATE LOCALIZED ASC");
     }
 }

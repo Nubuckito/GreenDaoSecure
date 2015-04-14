@@ -2,7 +2,9 @@ package com.nubuckito.greendaosecure;
 
 
 public class Constants {
-    public static final String SHARED_PREFS_SECURE_APP = "use_lines_in_notes";
+    public static final String SHARED_PREFS_SECURE_APP = "privacy_is_not_a_comfort";
+    public static final String IS_CYPHER_DB = "isCypherDB";
+    public static final String CURRENT_USER_MAIL = "currentUserMail";
 
     public static final String DBNAME = "SecuredDB";
     public static final String TAG = "NoteCipher";

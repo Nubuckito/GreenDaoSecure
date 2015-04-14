@@ -13,13 +13,11 @@ import info.guardianproject.cacheword.CacheWordHandler;
  * Created by Buzinga on 10/03/2015.
  */
 public class DBRepository {
-    private DaoSession daoSession = null;
-
-
     /**
      * Instance unique non préinitialisée
      */
     private static DBRepository INSTANCE = null;
+    private DaoSession daoSession = null;
 
 
     /**
@@ -27,18 +25,6 @@ public class DBRepository {
      */
     private DBRepository() {
     }
-
-
-    /**
-     * Holder
-     */
-    private static class DBRepositoryHolder {
-        /**
-         * Instance unique non préinitialisée
-         */
-        private final static DBRepository instance = new DBRepository();
-    }
-
 
     /**
      * Point d'accès pour l'instance unique du singleton
@@ -59,25 +45,30 @@ public class DBRepository {
         return false;
     }
 
-    public void closeDB() {
+    private void closeDB() {
         if (isSessionActive())
             daoSession.getDatabase().close();
     }
 
-    public void clearSession() {
+    private void clearSession() {
         if (isSessionActive())
             daoSession.clear();
     }
 
+    /**
+     * Close the database and clear the session.
+     * Call this method when onCacheWordLocked
+     */
     public void lock() {
         if (isSessionActive()) {
             daoSession.getDatabase().close();
             daoSession.clear();
             daoSession = null;
+            System.gc();
         }
     }
 
-    public void initializeDatabase(Context ctx, String dbName, CacheWordHandler cacheWordHandler, SQLiteDatabase.CursorFactory cursorFactory, boolean cypherDB) {
+    public void connectToDataBase(Context ctx, String dbName, CacheWordHandler cacheWordHandler, SQLiteDatabase.CursorFactory cursorFactory, boolean cypherDB) {
         DaoMaster.DevOpenHelper helper = new DaoMaster.DevOpenHelper(ctx, dbName, cacheWordHandler, cursorFactory, cypherDB);
         SQLiteDatabaseWrapper db = helper.getWritableDatabase();
         DaoMaster daoMaster = new DaoMaster(db);
@@ -86,5 +77,15 @@ public class DBRepository {
 
     public DaoSession getDaoSession() {
         return daoSession;
+    }
+
+    /**
+     * Holder
+     */
+    private static class DBRepositoryHolder {
+        /**
+         * Instance unique non préinitialisée
+         */
+        private final static DBRepository instance = new DBRepository();
     }
 }
