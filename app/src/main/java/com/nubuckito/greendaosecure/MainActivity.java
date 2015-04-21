@@ -5,16 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
+import android.widget.CursorAdapter;
 import android.widget.SimpleCursorAdapter;
+
+import com.nubuckito.greendaosecure.fragments.BoxListFragment;
 
 import greendao.BoxDao;
 import info.guardianproject.cacheword.CacheWordHandler;
@@ -23,7 +22,7 @@ import repository.BoxRepository;
 import repository.DBRepository;
 
 
-public class MainActivity extends ActionBarActivity implements ICacheWordSubscriber {
+public class MainActivity extends ActionBarActivity implements ICacheWordSubscriber, BoxListFragment.OnFragmentInteractionListener {
 
     private static final String TAG = LoginActivity.class.getName();
 
@@ -35,19 +34,13 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
-                    .commit();
-        }
 
         prefs = getSharedPreferences(Constants.SHARED_PREFS_SECURE_APP, MODE_PRIVATE);
-
 
         String[] from = {BoxDao.Properties.Name.columnName, BoxDao.Properties.Description.columnName};
         int[] to = {0/*name emplacement in listview*/, 1/*"description emplacement in listview"*/};
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2,
-                BoxRepository.getAllBoxesCursor(), from, to, SimpleCursorAdapter.NO_SELECTION);
+                BoxRepository.getAllBoxesCursor(), from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
         mCacheWord = new CacheWordHandler(this, 5000);
     }
@@ -142,19 +135,13 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
         return b.build();
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
+    @Override
+    public void onFragmentInteraction(Long id) {
 
-        public PlaceholderFragment() {
-        }
+    }
 
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
-        }
+    @Override
+    public CursorAdapter getDataList() {
+        return null;
     }
 }
