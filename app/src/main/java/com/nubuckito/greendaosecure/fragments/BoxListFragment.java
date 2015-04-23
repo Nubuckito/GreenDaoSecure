@@ -75,7 +75,7 @@ public class BoxListFragment extends Fragment implements AbsListView.OnItemClick
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
-        // TODO: Change Adapter to display your content
+        //Get the data from the Activity
         mAdapter = mListener.getDataList();
     }
 
@@ -93,6 +93,7 @@ public class BoxListFragment extends Fragment implements AbsListView.OnItemClick
 
         return view;
     }
+
 
     @Override
     public void onAttach(Activity activity) {

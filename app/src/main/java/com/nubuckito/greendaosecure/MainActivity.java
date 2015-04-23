@@ -30,6 +30,8 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
 
     private CacheWordHandler mCacheWord;
 
+    private SimpleCursorAdapter adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,8 +40,8 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
         prefs = getSharedPreferences(Constants.SHARED_PREFS_SECURE_APP, MODE_PRIVATE);
 
         String[] from = {BoxDao.Properties.Name.columnName, BoxDao.Properties.Description.columnName};
-        int[] to = {0/*name emplacement in listview*/, 1/*"description emplacement in listview"*/};
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2,
+        int[] to = {0/*name emplacement in listview (R.id.)*/, 1/*"description emplacement in listview"*/};
+        adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2,
                 BoxRepository.getAllBoxesCursor(), from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
         mCacheWord = new CacheWordHandler(this, 5000);
@@ -142,6 +144,6 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
 
     @Override
     public CursorAdapter getDataList() {
-        return null;
+        return adapter;
     }
 }
