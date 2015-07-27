@@ -1,7 +1,6 @@
 package com.nubuckito.greendaosecure.fragments;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.ListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.nubuckito.greendaosecure.R;
 
@@ -25,7 +25,7 @@ import greendao.Box;
  * Activities containing this fragment MUST implement the {@link OnFragmentInteractionListener}
  * interface.
  */
-public class BoxListFragment extends Fragment implements AbsListView.OnItemClickListener {
+public class BoxListFragment extends android.support.v4.app.Fragment implements AbsListView.OnItemClickListener {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -119,6 +119,8 @@ public class BoxListFragment extends Fragment implements AbsListView.OnItemClick
             // fragment is attached to one) that an item has been selected.
 
             mListener.onFragmentInteraction(((Box) parent.getSelectedItem()).getId());
+            Toast.makeText(getActivity(), ((Box) parent.getSelectedItem()).getName() + " Clicked!"
+                    , Toast.LENGTH_SHORT).show();
         }
     }
 

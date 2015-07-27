@@ -1,5 +1,19 @@
 package de.greenrobot.dao.wrapper;
 
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabase.CursorFactory;
+import android.os.Debug;
+import android.os.SystemClock;
+import android.util.Log;
+
+import net.sqlcipher.database.SQLiteDatabaseCorruptException;
+import net.sqlcipher.database.SQLiteDebug;
+import net.sqlcipher.database.SQLiteTransactionListener;
+
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -7,21 +21,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import net.sqlcipher.database.SQLiteDatabaseCorruptException;
-import net.sqlcipher.database.SQLiteDebug;
-import net.sqlcipher.database.SQLiteTransactionListener;
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.SQLException;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteDatabase.CursorFactory;
-import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteProgram;
-import android.database.sqlite.SQLiteStatement;
-import android.os.Debug;
-import android.os.SystemClock;
-import android.util.Log;
 import de.greenrobot.dao.wrapper.exception.NotSupportedOperationAndroidException;
 
 public class SQLiteDatabaseWrapper {
@@ -76,8 +75,9 @@ public class SQLiteDatabaseWrapper {
 	}
 
 	public static void loadLibs(Context context) {
-		net.sqlcipher.database.SQLiteDatabase.loadLibs(context);
-	}
+        String property = System.getProperty("java.library.path");
+        net.sqlcipher.database.SQLiteDatabase.loadLibs(context);
+    }
 
 	public static void loadLibs(Context context, File workingDir) {
 		net.sqlcipher.database.SQLiteDatabase.loadLibs(context, workingDir);
@@ -186,9 +186,9 @@ public class SQLiteDatabaseWrapper {
 	}
 
 	/**
-	 * Open the database according to the flags {@link #OPEN_READWRITE} {@link #OPEN_READONLY} {@link #CREATE_IF_NECESSARY} and/or {@link #NO_LOCALIZED_COLLATORS}.
-	 * 
-	 * <p>
+     * Open the database according to the flags OPEN_READWRITE OPEN_READONLY CREATE_IF_NECESSARY and/or NO_LOCALIZED_COLLATORS.
+     *
+     * <p>
 	 * Sets the locale of the database to the the system's current locale. Call {@link #setLocale} if you would like something else.
 	 * </p>
 	 * 
@@ -673,9 +673,9 @@ public class SQLiteDatabaseWrapper {
 	 *            this map contains the initial column values for the row. The keys should be the column names and the values the column values
 	 * @param conflictAlgorithm
 	 *            for insert conflict resolver
-	 * @return the row ID of the newly inserted row OR the primary key of the existing row if the input param 'conflictAlgorithm' = {@link #CONFLICT_IGNORE} OR -1 if any error
-	 */
-	public long insertWithOnConflict(String table, String nullColumnHack, ContentValues initialValues, int conflictAlgorithm) {
+     * @return the row ID of the newly inserted row OR the primary key of the existing row if the input param 'conflictAlgorithm' = CONFLICT_IGNORE OR -1 if any error
+     */
+    public long insertWithOnConflict(String table, String nullColumnHack, ContentValues initialValues, int conflictAlgorithm) {
 		if (isCypheredDb())
 			return sqlCypheredDatabase.insertWithOnConflict(table, nullColumnHack, initialValues, conflictAlgorithm);
 		else

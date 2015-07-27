@@ -5,8 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,11 +18,10 @@ import com.nubuckito.greendaosecure.fragments.BoxListFragment;
 import greendao.BoxDao;
 import info.guardianproject.cacheword.CacheWordHandler;
 import info.guardianproject.cacheword.ICacheWordSubscriber;
-import repository.BoxRepository;
 import repository.DBRepository;
 
 
-public class MainActivity extends ActionBarActivity implements ICacheWordSubscriber, BoxListFragment.OnFragmentInteractionListener {
+public class MainActivitySave extends FragmentActivity implements ICacheWordSubscriber, BoxListFragment.OnFragmentInteractionListener {
 
     private static final String TAG = LoginActivity.class.getName();
 
@@ -37,12 +36,24 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (savedInstanceState == null) {
+            BoxListFragment firstFragment = new BoxListFragment();
+
+            // In case this activity was started with special instructions from an
+            // Intent, pass the Intent's extras to the fragment as arguments
+            firstFragment.setArguments(getIntent().getExtras());
+
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.container, firstFragment)
+                    .commit();
+        }
+
         prefs = getSharedPreferences(Constants.SHARED_PREFS_SECURE_APP, MODE_PRIVATE);
 
         String[] from = {BoxDao.Properties.Name.columnName, BoxDao.Properties.Description.columnName};
         int[] to = {0/*name emplacement in listview (R.id.)*/, 1/*"description emplacement in listview"*/};
         adapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_2,
-                BoxRepository.getAllBoxesCursor(), from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+                null, from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
         mCacheWord = new CacheWordHandler(this, 5000);
     }
@@ -115,6 +126,8 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
 
     void clearViewsAndLock() {
         DBRepository.getInstance().lock();
+        //TODO clean the list view of the fragment
+        System.gc();
         showLockScreen();
     }
 
@@ -128,7 +141,7 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
         NotificationCompat.Builder b = new NotificationCompat.Builder(c);
         b.setSmallIcon(R.drawable.common_signin_btn_text_light);
         b.setContentTitle("Bienvenue !");
-        b.setContentText("Vous êtes connecté.");
+        b.setContentText("Vous Ãªtes connectÃ©.");
         //b.setTicker(c.getText(R.string.cacheword_notification_cached));
         b.setDefaults(Notification.DEFAULT_VIBRATE);
         b.setWhen(System.currentTimeMillis());
@@ -139,7 +152,7 @@ public class MainActivity extends ActionBarActivity implements ICacheWordSubscri
 
     @Override
     public void onFragmentInteraction(Long id) {
-
+        //Do something with the item selected (ex : start an activity to show a simple box if in single pane mode)
     }
 
     @Override

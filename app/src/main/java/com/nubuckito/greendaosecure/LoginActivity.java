@@ -135,7 +135,7 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
 
     @Override
     protected void onResume() {
-        super.onStart();
+        super.onResume();
         // Notify the CacheWordHandler
         mCacheWord.connectToService();
     }
@@ -240,8 +240,6 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
     @Override
     public void onCacheWordUninitialized() {
         initializePassphrase();
-        initializeDatabase();
-        prefs.edit().putBoolean(Constants.IS_CYPHER_DB, mEncryptCheckBox.isChecked()).commit();
     }
 
     /**
@@ -346,6 +344,9 @@ public class LoginActivity extends Activity implements LoaderCallbacks<Cursor>, 
             // TODO initialization failed
             Log.e(TAG, "Cacheword pass initialization failed: " + e.getMessage());
         }
+
+        initializeDatabase();
+        prefs.edit().putBoolean(Constants.IS_CYPHER_DB, mEncryptCheckBox.isChecked()).commit();
     }
 
     /**

@@ -49,7 +49,6 @@ public abstract class SQLiteOpenHelperWrapper {
 		mCryptDB = cryptDB;
 
 		if (mCryptDB) {
-			// Load SQLcipher libraries if needed
 			SQLiteDatabaseWrapper.loadLibs(mContext);
 		}
 	}

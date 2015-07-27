@@ -19,6 +19,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':cachewordlib')
+    compile files('src/main/jniLibs/sqlcipher.jar')
 }

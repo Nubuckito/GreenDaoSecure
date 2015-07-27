@@ -80,9 +80,9 @@ public class CacheWordHandler {
 
     /**
      * Initializes the CacheWordHandler with the default
-     * {@link CacheWordSettings}
+     * CacheWordSettings
      *
-     * @see #CacheWordHandler(Context context, CacheWordSettings settings)
+     * CacheWordHandler(Context context, CacheWordSettings settings)
      * @param context
      */
     public CacheWordHandler(Context context) {
@@ -332,8 +332,8 @@ public class CacheWordHandler {
 
     /**
      * Set the {@link Notification} used by {@link CacheWordService} when it
-     * runs as a foreground {@link Service}. If this is set to {@code null},
-     * then {@link CacheWordService} will run as a background {@link Service}.
+     * runs as a foreground Service. If this is set to {@code null},
+     * then {@link CacheWordService} will run as a background Service.
      *
      * @param notification
      */
@@ -387,7 +387,6 @@ public class CacheWordHandler {
         int newState = Constants.STATE_UNKNOWN;
 
         if (!isCacheWordConnected()) {
-            newState = Constants.STATE_UNKNOWN;
             Log.d(TAG, "checkCacheWordState: not connected");
         } else if (!isCacheWordInitialized()) {
             newState = Constants.STATE_UNINITIALIZED;

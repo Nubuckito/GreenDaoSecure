@@ -14,20 +14,20 @@ import info.guardianproject.cacheword.CacheWordHandler;
  */
 public class DBRepository {
     /**
-     * Instance unique non préinitialisée
+     * Instance unique non preinitialisee
      */
     private static DBRepository INSTANCE = null;
     private DaoSession daoSession = null;
 
 
     /**
-     * Constructeur privé
+     * Constructeur prive
      */
     private DBRepository() {
     }
 
     /**
-     * Point d'accès pour l'instance unique du singleton
+     * Point d'acces pour l'instance unique du singleton
      */
     public static DBRepository getInstance() {
         return DBRepositoryHolder.instance;
@@ -84,7 +84,7 @@ public class DBRepository {
      */
     private static class DBRepositoryHolder {
         /**
-         * Instance unique non préinitialisée
+         * Instance unique non preinitialisee
          */
         private final static DBRepository instance = new DBRepository();
     }

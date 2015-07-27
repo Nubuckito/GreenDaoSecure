@@ -17,9 +17,7 @@
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
             android:windowSoftInputMode="adjustResize|stateVisible" />
-        <activity
-            android:name=".MainActivity"
-            android:label="@string/title_activity_main">
+        <activity android:name=".MainActivitySave">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
